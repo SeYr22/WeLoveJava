@@ -1,3 +1,4 @@
+import com.company.PhotosInfo;
 import com.teamdev.jxbrowser.browser.Browser;
 import com.teamdev.jxbrowser.engine.Engine;
 import com.teamdev.jxbrowser.engine.EngineOptions;
@@ -13,6 +14,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,10 +56,12 @@ public class myGUI extends JFrame {
     private JButton task6btnChange;
     private JButton button2;
     private JTextField a5TextField;
+    private JLabel imageTask4;
     private JLabel label2;
     public static JFrame mainFrame;
     boolean task5 = false, task6 = false;
     BufferedImage startImageTask6 = null, endImageTask6 = null;
+    PhotosInfo photosInfo = new PhotosInfo();
 
     public myGUI() {
 
@@ -312,17 +317,19 @@ public class myGUI extends JFrame {
                 super.mouseClicked(e);
                 String b = a5TextField.getText();
                 int f = 0;
-                for(int i = 0; i < b.length(); i++)
-                    f = f * 10 + (int)(b.charAt(i) - '0');
-                for(int i = 0; i < f; i++){
+                for (int i = 0; i < b.length(); i++)
+                    f = f * 10 + (int) (b.charAt(i) - '0');
+                boolean verify = false;
+                for (int i = 0; i < f; i++) {
                     JFileChooser fileopen = new JFileChooser();
                     int ret;
                     String path1;
+                    Image IMG = null;
                     ret = fileopen.showDialog(null, "Открыть файл");
                     if (ret == JFileChooser.APPROVE_OPTION) {
                         File file = fileopen.getSelectedFile();
                         path1 = file.getPath();
-                        Image IMG = null;
+
                         try {
                             IMG = ImageIO.read(new File(path1));
                         } catch (IOException a) {
@@ -330,18 +337,80 @@ public class myGUI extends JFrame {
                         }
 
                     }
-                    /*String result = JOptionPane.showInputDialog(
-                            JOptionPaneTest.this,
-                            "<html><h2>Добро пожаловать");
-                    JOptionPane.showInputDialog(JOptionPaneTest.this,
-                            "Вы ответили", result);*/
-
-                    // gggg
+                    JTextField field1 = new JTextField();
+                    JTextField field2 = new JTextField();
+                    JTextField field3 = new JTextField();
+                    JTextField field4 = new JTextField();
+                    JTextField field5 = new JTextField();
+                    JTextField field6 = new JTextField();
+                    Object[] message = {
+                            "Довгота", field1,
+                            "Широта", field2,
+                            "Висота", field3,
+                            "Рискання", field4,
+                            "Крен", field5,
+                            "Тангаж", field6,
+                    };
+                    int option = JOptionPane.showConfirmDialog(null, message, "Введіть значення", JOptionPane.OK_CANCEL_OPTION);
+                    if (option == JOptionPane.OK_OPTION) {
+                        String valueX = field1.getText();
+                        String valueY = field2.getText();
+                        String valueZ = field3.getText();
+                        String valueYaw = field4.getText();
+                        String valueRoll = field5.getText();
+                        String valuePitch = field6.getText();
+                        photosInfo.receivePhoto(IMG, Double.parseDouble(valueZ), Double.parseDouble(valueX),
+                                Double.parseDouble(valueY), Double.parseDouble(valueYaw),
+                                Double.parseDouble(valueRoll), Double.parseDouble(valuePitch));
+                    } else {
+                        verify = true;
+                        break;
+                    }
 
                 }
-                solveTask4();
+                if (!verify) {
+                    List<Image> lsImages = solveTask4();
+                    if (lsImages.size() != 0) {
+                        BufferedImage tmp123 = (BufferedImage) lsImages.get(0);
+                        Mat src = null;
+                        try {
+                            src = BufferedImage2Mat(tmp123);
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                        double normalS = 500 * 500;
+                        double Sc = src.width() * src.height();
+                        double k = sqrt(Sc / normalS);
+                        if (k < 1) k = 1;
+                        Mat tra = new Mat(2, 3, CvType.CV_32FC1);
+                        tra.put(0, 0,
+                                1 / k, 0, 0,
+                                0, 1 / k, 0
+                        );
+                        Imgproc.warpAffine(src, src, tra, new Size(src.width() / k, src.height() / k));
+                        try {
+                            imageTask4.setIcon(new ImageIcon(Mat2BufferedImage(src)));
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                    } else {
+
+                    }
+                }
             }
         });
+    }
+
+    public static BufferedImage scaleImage(BufferedImage before, double size) {
+        int w = before.getWidth();
+        int h = before.getHeight();
+        BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        AffineTransform at = new AffineTransform();
+        at.scale(size / w, size / w);
+        AffineTransformOp scaleOp =
+                new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+        after = scaleOp.filter(before, after);
+        return after;
     }
 
     public static void loadOpenCV_Lib() throws Exception {
@@ -431,11 +500,18 @@ public class myGUI extends JFrame {
         buttonSolveTask23.setText("Виконати");
         Task2.add(buttonSolveTask23, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         Task4 = new JPanel();
-        Task4.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        Task4.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(4, 2, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання4", Task4);
-        final JLabel label1 = new JLabel();
-        label1.setText("DO UR STUFF HERE");
-        Task4.add(label1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        a5TextField = new JTextField();
+        a5TextField.setText("5");
+        Task4.add(a5TextField, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 2, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTHWEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        imageTask4 = new JLabel();
+        imageTask4.setIcon(new ImageIcon(getClass().getResource("/dijkstra.png")));
+        imageTask4.setText("");
+        Task4.add(imageTask4, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        button2 = new JButton();
+        button2.setText("Button");
+        Task4.add(button2, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTHWEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         Task5 = new JPanel();
         Task5.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 10, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання5", Task5);
@@ -480,3 +556,5 @@ public class myGUI extends JFrame {
     }
 
 }
+
+

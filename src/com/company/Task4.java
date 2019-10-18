@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Task4 {
-    public static void solveTask4(){
+    public static List<Image> solveTask4(){
         List<Area> areaList = new ArrayList<>();
+        Image[] arrayOfImages = new Image[22];
+        List<Image> listOfImages = new ArrayList<>();
 
         for(int i = 0; i < PhotosInfo.photos.size(); i++){
             Path2D.Double path = new Path2D.Double();
@@ -52,14 +54,29 @@ public class Task4 {
         }
         while(next_permutation(a));
         if(ok) {
-            System.out.println("Result:");
+          //  System.out.println("Result:");
             for(int i = 0; i < PhotosInfo.photos.size(); ++i) {
-                System.out.print(a[i] + " ");
+            //    System.out.print(a[i] + " ");
+                arrayOfImages[a[i]] = PhotosInfo.photos.get(i).getImage();
+             /*   System.out.println(PhotosInfo.photos.get(i).getLeftBottomCorner().toString() + " " +
+                        PhotosInfo.photos.get(i).getRightBottomCorner().toString() + " " +
+                        PhotosInfo.photos.get(i).getRightTopCorner().toString() + " " +
+                        PhotosInfo.photos.get(i).getLeftTopCorner().toString());*/
             }
+            for(int i = 0; i < PhotosInfo.photos.size(); i++)
+                listOfImages.add(arrayOfImages[i]);
         }
         else {
+          //  for(int i = 0; i < PhotosInfo.photos.size(); ++i) {
+                //    System.out.print(a[i] + " ");
+           /*     System.out.println(PhotosInfo.photos.get(i).getLeftBottomCorner().toString() + " " +
+                        PhotosInfo.photos.get(i).getRightBottomCorner().toString() + " " +
+                        PhotosInfo.photos.get(i).getRightTopCorner().toString() + " " +
+                        PhotosInfo.photos.get(i).getLeftTopCorner().toString());*/
+           // }
             System.out.println("Incorrect data");
         }
+        return listOfImages;
     }
     public static boolean next_permutation(int[] p) {
         for (int a = p.length - 2; a >= 0; --a)

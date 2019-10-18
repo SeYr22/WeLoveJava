@@ -15,12 +15,14 @@ public class PhotosInfo {
         Matrices.buildRollMatrix(MathTransform.degreeToRadian(roll));
         Matrices.buildPitchMatrix(MathTransform.degreeToRadian(pitch));
 
-        photos.add(new Photo(image, height, MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height * 1000), "leftTopCorner"),
-                MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height * 1000), "rightTopCorner"),
-                MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height * 1000), "leftBottomCorner"),
-                MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height * 1000), "rightBottomCorner")));
+        photos.add(new Photo(image, height, MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height/* * 1000*/), "leftTopCorner"),
+                MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height/* * 1000*/), "rightTopCorner"),
+                MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height /** 1000*/), "leftBottomCorner"),
+                MathTransform.getMatrixPointOnGround(new Point3(longitude, latitude, height/* * 1000*/), "rightBottomCorner")));
     }
-
+    public static void clearPhotos(){
+        photos.clear();
+    }
     public class Photo{
         private Image image;
         private double height;
@@ -34,6 +36,7 @@ public class PhotosInfo {
             this.leftBottomCorner = leftBottomCorner;
             this.rightBottomCorner = rightBottomCorner;
         }
+
 
         public Image getImage() {
             return image;
