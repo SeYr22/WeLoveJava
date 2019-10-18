@@ -1,8 +1,6 @@
-import com.sun.javafx.geom.Vec3d;
 import com.teamdev.jxbrowser.browser.Browser;
 import com.teamdev.jxbrowser.engine.Engine;
 import com.teamdev.jxbrowser.engine.EngineOptions;
-import com.teamdev.jxbrowser.js.JsObject;
 import com.teamdev.jxbrowser.view.swing.BrowserView;
 import org.opencv.core.*;
 import org.opencv.core.Point;
@@ -16,21 +14,19 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.URL;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.company.Task23.*;
+import static com.company.Task4.solveTask4;
+import static com.company.Task5.*;
 import static com.teamdev.jxbrowser.engine.RenderingMode.HARDWARE_ACCELERATED;
 import static java.lang.Math.sqrt;
-import static java.lang.System.exit;
 import static org.opencv.imgcodecs.Imgcodecs.imread;
 
 public class myGUI extends JFrame {
@@ -39,36 +35,37 @@ public class myGUI extends JFrame {
     private JTabbedPane JTable;
     private JPanel Task1;
     private JPanel Task2;
-    private JLabel Rofloturik;
-    private JLabel solo332;
+    // private JLabel Rofloturik;
+    // private JLabel solo332;
     private JButton TestButt;
     private JPanel Task4;
     private JPanel Task5;
     private JPanel Task6;
     private JButton button1;
-    private JTextField textBOX;
     private JButton buttonReadImages;
     private JButton buttonSolveTask23;
-    private JPanel ansImage = new JPanel();
+    private JButton buttonReadImages2;
+    private JButton buttonSolveTask5;
+    private JLabel task5Image;
+    private JButton buttonNextTask5;
+    private JLabel imageTask23;
+    private JLabel imageTask6;
+    private JButton task6btnChange;
+    private JButton button2;
+    private JTextField a5TextField;
+    private JLabel label2;
     public static JFrame mainFrame;
-    // Task23 task23 = new Task23();
-    //  static Browser browser;
-    //   static public JFrame frameSecond;
-    //  static JFrame frame;
+    boolean task5 = false, task6 = false;
+    BufferedImage startImageTask6 = null, endImageTask6 = null;
 
     public myGUI() {
-        Rofloturik.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-            }
-        });
 
 
         TestButt.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                // mainFrame.setEnabled(false);
                 mainFrame.setVisible(false);
                 Browser browser;
                 EngineOptions options =
@@ -81,17 +78,18 @@ public class myGUI extends JFrame {
                     BrowserView view = BrowserView.newInstance(browser);
                     JFrame frame;
                     frame = new JFrame("Карта");
-                    frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
                     frame.setSize(900, 500);
                     view.setSize(900, 400);
                     frame.add(view);
                     frame.setLocationRelativeTo(null);
                     frame.setVisible(true);
-                    browser.navigation().loadUrl("http://lit-tui.rf.gd");
+                    browser.navigation().loadUrl("C:\\Users\\Пользователь\\Desktop\\htdocs\\index.html");
                     frame.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosing(WindowEvent e) {
                             super.windowClosing(e);
+                            //mainFrame.setEnabled(true);
                             mainFrame.setVisible(true);
                             System.out.println("ralf");
 
@@ -105,89 +103,95 @@ public class myGUI extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                JPanel panel = new JPanel();
-                BufferedImage img = null;
-                try {
-                    img = ImageIO.read(new File(textBOX.getText()));
-                } catch (IOException a) {
 
-                }
+                JFileChooser fileopen = new JFileChooser();
+                int ret = fileopen.showDialog(null, "Открыть файл");
+                if (ret == JFileChooser.APPROVE_OPTION) {
+                    File file = fileopen.getSelectedFile();
+                    String path1 = file.getPath();
+                    try {
+                        startImageTask6 = ImageIO.read(new File(path1));
+                    } catch (IOException a) {
 
-                Mat src = null;
-                try {
-                    src = BufferedImage2Mat(img);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-                double normalS = 800 * 800;
-                double Sc = src.width() * src.height();
-                double k = sqrt(Sc / normalS);
-                if (k < 1) k = 1;
-                Mat tra = new Mat(2, 3, CvType.CV_32FC1);
-                tra.put(0, 0,
-                        1 / k, 0, 0,
-                        0, 1 / k, 0
-                );
-                Imgproc.warpAffine(src, src, tra, new Size(src.width() / k, src.height() / k));
-
-                Mat hsv = new Mat(src.cols(), src.rows(), 3);
-                List<Mat> splitedHsv = new ArrayList<>();
-                Imgproc.cvtColor(src, hsv, Imgproc.COLOR_BGR2HSV);
-                Core.split(hsv, splitedHsv);
-
-                final int HUE_MIN = 7;
-                final int HUE_MAX = 90;
-                final int SATURATION_MIN = 20;
-                final int VALUE_MIN = 100;
-
-                for (int y = 0; y < hsv.cols(); y++) {
-                    for (int x = 0; x < hsv.rows(); x++) {
-                        // получаем HSV-компоненты пикселя
-                        int H = (int) splitedHsv.get(0).get(x, y)[0];        // Тон
-                        int S = (int) splitedHsv.get(1).get(x, y)[0];          // Интенсивность
-                        int V = (int) splitedHsv.get(2).get(x, y)[0];          // Яркость
-                        //System.out.println(V);
-                        //Если яркость слишком низкая либо Тон не попадает у заданный диапазон, то закрашиваем белым
-                        if ((H >= HUE_MIN && H <= HUE_MAX) && S >= SATURATION_MIN) {
-                            double a[] = {(double) (H - HUE_MIN) / HUE_MAX * 255, (double) (H - HUE_MIN) / HUE_MAX * 100, 0};
-                            src.put(x, y, a);
-                        }
                     }
                 }
+                if (startImageTask6 != null) {
+                    Mat src = null;
+                    try {
+                        src = BufferedImage2Mat(startImageTask6);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    double normalS = 500 * 500;
+                    double Sc = src.width() * src.height();
+                    double k = sqrt(Sc / normalS);
+                    if (k < 1) k = 1;
+                    Mat tra = new Mat(2, 3, CvType.CV_32FC1);
+                    tra.put(0, 0,
+                            1 / k, 0, 0,
+                            0, 1 / k, 0
+                    );
+                    Imgproc.warpAffine(src, src, tra, new Size(src.width() / k, src.height() / k));
+                    try {
+                        startImageTask6 = Mat2BufferedImage(src);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    Mat hsv = new Mat(src.cols(), src.rows(), 3);
+                    List<Mat> splitedHsv = new ArrayList<>();
+                    Imgproc.cvtColor(src, hsv, Imgproc.COLOR_BGR2HSV);
+                    Core.split(hsv, splitedHsv);
 
-                Mat tmp = new Mat();
-                int an = 5;
-                Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(an * 2 + 1, an * 2 + 1), new Point(an, an));
-                Imgproc.dilate(src, tmp, element);
-                Imgproc.erode(tmp, tmp, element);
-                Mat grayscaleMat = new Mat();
-                Imgproc.cvtColor(tmp, grayscaleMat, Imgproc.COLOR_BGR2HSV);
-                //Делаем бинарную маску
-                Mat mask = new Mat(grayscaleMat.size(), grayscaleMat.type());
-                Imgproc.threshold(grayscaleMat, mask, 200, 255, Imgproc.THRESH_BINARY_INV);
-                //Финальное изображение предварительно красим в белый цвет
-                Mat out = new Mat(src.size(), src.type(), Scalar.all(255));
-                //Копируем зашумленное изображение через маску
-                src.copyTo(out, mask);
-                BufferedImage lul = null;
-                try {
-                    lul = Mat2BufferedImage(src);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
+                    final int HUE_MIN = 7;
+                    final int HUE_MAX = 30;
+                    final int SATURATION_MIN = 40;
+                    final int VALUE_MIN = 100;
+
+                    for (int y = 0; y < hsv.cols(); y++) {
+                        for (int x = 0; x < hsv.rows(); x++) {
+                            // получаем HSV-компоненты пикселя
+                            int H = (int) splitedHsv.get(0).get(x, y)[0];        // Тон
+                            int S = (int) splitedHsv.get(1).get(x, y)[0];          // Интенсивность
+                            int V = (int) splitedHsv.get(2).get(x, y)[0];          // Яркость
+                            //System.out.println(V);
+                            //Если яркость слишком низкая либо Тон не попадает у заданный диапазон, то закрашиваем белым
+                            if ((H >= HUE_MIN && H <= HUE_MAX)) {
+                                double a[] = {(double) (H - HUE_MIN) / HUE_MAX * 255, (double) (H - HUE_MIN) / HUE_MAX * 100, 0};
+                                src.put(x, y, a);
+                            } else if (S <= SATURATION_MIN) {
+                                double a[] = {255, 160, 90};
+                                src.put(x, y, a);
+                            }
+                        }
+                    }
+
+                    Mat tmp = new Mat();
+                    int an = 5;
+                    Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(an * 2 + 1, an * 2 + 1), new Point(an, an));
+                    Imgproc.dilate(src, tmp, element);
+                    Imgproc.erode(tmp, tmp, element);
+                    Mat grayscaleMat = new Mat();
+                    Imgproc.cvtColor(tmp, grayscaleMat, Imgproc.COLOR_BGR2HSV);
+                    //Делаем бинарную маску
+                    Mat mask = new Mat(grayscaleMat.size(), grayscaleMat.type());
+                    Imgproc.threshold(grayscaleMat, mask, 200, 255, Imgproc.THRESH_BINARY_INV);
+                    //Финальное изображение предварительно красим в белый цвет
+                    Mat out = new Mat(src.size(), src.type(), Scalar.all(255));
+                    //Копируем зашумленное изображение через маску
+                    src.copyTo(out, mask);
+                    try {
+                        endImageTask6 = Mat2BufferedImage(src);
+                        imageTask6.setIcon(new ImageIcon(endImageTask6));
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    task6btnChange.setText("Стартове зображення");
+                    task6 = false;
+                    task6btnChange.setEnabled(true);
                 }
-                JLabel label = new JLabel(new ImageIcon(lul));
-                panel.add(label);
-                JFrame frame = new JFrame("ТЮІ");
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-                // add the Jpanel to the main window
-                frame.add(panel);
-
-                frame.pack();
-                frame.setVisible(true);
             }
         });
-        buttonReadImages.addMouseListener(new MouseAdapter() {
+        buttonSolveTask23.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
@@ -196,44 +200,146 @@ public class myGUI extends JFrame {
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                try {
-                    BufferedImage currim = Mat2BufferedImage(Task23.img);
-                    JLabel label = new JLabel(new ImageIcon(currim));
-//                    ansImage.add(label);
-
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
-
-            }
-        });
-        buttonSolveTask23.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                JPanel panel = new JPanel();
                 if (Task23.isImageSet) {
                     findTransformMatrix();
                     setValue();
                     try {
                         BufferedImage currim = Mat2BufferedImage(solve());
-                        JLabel label = new JLabel(new ImageIcon(currim));
-                        //ansImage.add(label);
-                        panel.add(label);
-                        JFrame frame = new JFrame("ТЮfІ");
-                        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-                        // add the Jpanel to the main window
-                        frame.add(panel);
-
-                        frame.pack();
-                        frame.setVisible(true);
+                        imageTask23.setIcon(new ImageIcon(currim));
                     } catch (Exception e1) {
                         e1.printStackTrace();
                     }
 
 
                 }
+            }
+        });
+        buttonReadImages2.addKeyListener(new KeyAdapter() {
+        });
+        buttonReadImages2.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                try {
+                    readImages2();
+                    task5 = false;
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                if (imageIsSet) {
+                    BufferedImage currim = null;
+                    try {
+                        currim = Mat2BufferedImage(mat1);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    buttonNextTask5.setEnabled(true);
+                    buttonSolveTask5.setEnabled(true);
+                    task5Image.setIcon(new ImageIcon((currim)));
+                } else {
+                    buttonNextTask5.setEnabled(false);
+                    buttonSolveTask5.setEnabled(false);
+                }
+            }
+        });
+        buttonSolveTask5.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (imageIsSet) {
+                    solvetask5();
+                    BufferedImage currim = null;
+                    try {
+                        if (!task5)
+                            currim = Mat2BufferedImage(mat1);
+                        else currim = Mat2BufferedImage(mat2);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                    task5Image.setIcon(new ImageIcon(currim));
+                }
+
+            }
+        });
+        buttonNextTask5.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (imageIsSet) {
+                    if (task5) {
+                        task5 = false;
+                        buttonNextTask5.setText("Друге зображення");
+                        BufferedImage currim = null;
+                        try {
+                            currim = Mat2BufferedImage(mat1);
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                        task5Image.setIcon(new ImageIcon(currim));
+
+                    } else {
+                        task5 = true;
+                        buttonNextTask5.setText("Перше зображення");
+                        BufferedImage currim = null;
+                        try {
+                            currim = Mat2BufferedImage(mat2);
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                        task5Image.setIcon(new ImageIcon(currim));
+                    }
+                }
+            }
+        });
+        task6btnChange.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (!task6) {
+                    imageTask6.setIcon(new ImageIcon(startImageTask6));
+                    task6btnChange.setText("Фінальне зображення");
+                    task6 = true;
+                } else {
+                    task6 = false;
+                    imageTask6.setIcon(new ImageIcon(endImageTask6));
+                    task6btnChange.setText("Стартове зображення");
+                }
+            }
+        });
+        button2.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                String b = a5TextField.getText();
+                int f = 0;
+                for(int i = 0; i < b.length(); i++)
+                    f = f * 10 + (int)(b.charAt(i) - '0');
+                for(int i = 0; i < f; i++){
+                    JFileChooser fileopen = new JFileChooser();
+                    int ret;
+                    String path1;
+                    ret = fileopen.showDialog(null, "Открыть файл");
+                    if (ret == JFileChooser.APPROVE_OPTION) {
+                        File file = fileopen.getSelectedFile();
+                        path1 = file.getPath();
+                        Image IMG = null;
+                        try {
+                            IMG = ImageIO.read(new File(path1));
+                        } catch (IOException a) {
+
+                        }
+
+                    }
+                    /*String result = JOptionPane.showInputDialog(
+                            JOptionPaneTest.this,
+                            "<html><h2>Добро пожаловать");
+                    JOptionPane.showInputDialog(JOptionPaneTest.this,
+                            "Вы ответили", result);*/
+
+                    // gggg
+
+                }
+                solveTask4();
             }
         });
     }
@@ -256,35 +362,6 @@ public class myGUI extends JFrame {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    protected Mat img2Mat(BufferedImage in) {
-        Mat out;
-        byte[] data;
-        int r, g, b;
-
-        if (in.getType() == BufferedImage.TYPE_INT_RGB) {
-            out = new Mat(in.getHeight(), in.getWidth(), CvType.CV_8UC3);
-            data = new byte[in.getWidth() * in.getHeight() * (int) out.elemSize()];
-            int[] dataBuff = in.getRGB(0, 0, in.getWidth(), in.getHeight(), null, 0, in.getWidth());
-            for (int i = 0; i < dataBuff.length; i++) {
-                data[i * 3] = (byte) ((dataBuff[i] >> 0) & 0xFF);
-                data[i * 3 + 1] = (byte) ((dataBuff[i] >> 8) & 0xFF);
-                data[i * 3 + 2] = (byte) ((dataBuff[i] >> 16) & 0xFF);
-            }
-        } else {
-            out = new Mat(in.getHeight(), in.getWidth(), CvType.CV_8UC1);
-            data = new byte[in.getWidth() * in.getHeight() * (int) out.elemSize()];
-            int[] dataBuff = in.getRGB(0, 0, in.getWidth(), in.getHeight(), null, 0, in.getWidth());
-            for (int i = 0; i < dataBuff.length; i++) {
-                r = (byte) ((dataBuff[i] >> 0) & 0xFF);
-                g = (byte) ((dataBuff[i] >> 8) & 0xFF);
-                b = (byte) ((dataBuff[i] >> 16) & 0xFF);
-                data[i] = (byte) ((0.21 * r) + (0.71 * g) + (0.07 * b));
-            }
-        }
-        out.put(0, 0, data);
-        return out;
-    }
-
     public static Mat BufferedImage2Mat(BufferedImage image) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "jpg", byteArrayOutputStream);
@@ -305,10 +382,11 @@ public class myGUI extends JFrame {
         loadOpenCV_Lib();
         System.out.println("rofl");
         JFrame.setDefaultLookAndFeelDecorated(true);
-        mainFrame = new JFrame("myGUI");
+        mainFrame = new JFrame("TUI");
         mainFrame.setContentPane(new myGUI().MyPanel);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.pack();
+        mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
     }
 
@@ -335,32 +413,23 @@ public class myGUI extends JFrame {
         MyPanel = new JPanel();
         MyPanel.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         JTable = new JTabbedPane();
-        MyPanel.add(JTable, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+        MyPanel.add(JTable, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         Task1 = new JPanel();
-        Task1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        Task1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання1", Task1);
-        Rofloturik = new JLabel();
-        Rofloturik.setText("RAMZES666");
-        Task1.add(Rofloturik, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         TestButt = new JButton();
         TestButt.setText("Start");
-        Task1.add(TestButt, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        Task1.add(TestButt, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         Task2 = new JPanel();
-        Task2.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(4, 2, new Insets(0, 0, 0, 0), -1, -1));
+        Task2.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання2,3", Task2);
-        final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
-        Task2.add(spacer1, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final com.intellij.uiDesigner.core.Spacer spacer2 = new com.intellij.uiDesigner.core.Spacer();
-        Task2.add(spacer2, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 3, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        buttonReadImages = new JButton();
-        buttonReadImages.setText("Вибрати зображення");
-        Task2.add(buttonReadImages, new com.intellij.uiDesigner.core.GridConstraints(1, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        imageTask23 = new JLabel();
+        imageTask23.setIcon(new ImageIcon(getClass().getResource("/dijkstra.png")));
+        imageTask23.setText("");
+        Task2.add(imageTask23, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonSolveTask23 = new JButton();
         buttonSolveTask23.setText("Виконати");
-        Task2.add(buttonSolveTask23, new com.intellij.uiDesigner.core.GridConstraints(3, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        ansImage = new JPanel();
-        ansImage.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        Task2.add(ansImage, new com.intellij.uiDesigner.core.GridConstraints(2, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        Task2.add(buttonSolveTask23, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         Task4 = new JPanel();
         Task4.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання4", Task4);
@@ -368,24 +437,39 @@ public class myGUI extends JFrame {
         label1.setText("DO UR STUFF HERE");
         Task4.add(label1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         Task5 = new JPanel();
-        Task5.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        Task5.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 10, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання5", Task5);
-        final JLabel label2 = new JLabel();
-        label2.setText("DO UR STUFF HERE");
-        Task5.add(label2, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        task5Image = new JLabel();
+        task5Image.setIcon(new ImageIcon(getClass().getResource("/dijkstra.png")));
+        task5Image.setText("");
+        task5Image.setVerticalAlignment(0);
+        task5Image.setVerticalTextPosition(0);
+        Task5.add(task5Image, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 10, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(20, 20), null, 0, false));
+        buttonNextTask5 = new JButton();
+        buttonNextTask5.setEnabled(false);
+        buttonNextTask5.setText("Друге зображення");
+        Task5.add(buttonNextTask5, new com.intellij.uiDesigner.core.GridConstraints(0, 6, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTHWEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buttonReadImages2 = new JButton();
+        buttonReadImages2.setText("Виберіть зображення");
+        Task5.add(buttonReadImages2, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTHWEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        buttonSolveTask5 = new JButton();
+        buttonSolveTask5.setEnabled(false);
+        buttonSolveTask5.setText("Виконати");
+        Task5.add(buttonSolveTask5, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 5, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTHWEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         Task6 = new JPanel();
         Task6.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         JTable.addTab("Завдання6", Task6);
-        textBOX = new JTextField();
-        textBOX.setText("C:\\Users\\Пользователь\\Documents\\statement.png");
-        Task6.add(textBOX, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
-        final JLabel label3 = new JLabel();
-        label3.setEnabled(true);
-        label3.setText("Шлях до зображення:");
-        Task6.add(label3, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        imageTask6 = new JLabel();
+        imageTask6.setIcon(new ImageIcon(getClass().getResource("/dijkstra.png")));
+        imageTask6.setText("");
+        Task6.add(imageTask6, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         button1 = new JButton();
-        button1.setText("Button");
-        Task6.add(button1, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        button1.setText("Виконати");
+        Task6.add(button1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        task6btnChange = new JButton();
+        task6btnChange.setEnabled(false);
+        task6btnChange.setText(" Стартове зображення");
+        Task6.add(task6btnChange, new com.intellij.uiDesigner.core.GridConstraints(0, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

@@ -52,7 +52,7 @@ public class Task23 {
 
             }
             img =BufferedImage2Mat(BuffIMG);
-            double normalS = 800 * 800;
+            double normalS = 600 * 600;
             double Sc = img.width() * img.height();
             double k2 = sqrt(Sc / normalS);
             if (k2 < 1) k2 = 1;
