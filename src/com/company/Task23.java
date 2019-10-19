@@ -26,7 +26,7 @@ public class Task23 {
     static public double tr[][];
     static  public byte[] arr, res, res2, arr2;
     static  public int[][] value, value2;
-    static   public boolean isImageSet;
+    static   public boolean isImageSet, diffFound = true;
     public static Mat BufferedImage2Mat(BufferedImage image) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "jpg", byteArrayOutputStream);
@@ -35,6 +35,7 @@ public class Task23 {
     }
     static public void readImages() throws IOException {
         isImageSet = true;
+        diffFound = true;
         JFileChooser fileopen = new JFileChooser();
         int ret;
         double S, k;
@@ -51,6 +52,8 @@ public class Task23 {
             } catch (IOException a) {
 
             }
+            if(BuffIMG == null)isImageSet = false;
+            else{
             img =BufferedImage2Mat(BuffIMG);
             double normalS = 600 * 600;
             double Sc = img.width() * img.height();
@@ -64,10 +67,11 @@ public class Task23 {
             Imgproc.warpAffine(img, img, tra2, new Size(img.width() / k2, img.height() / k2));
            // img = Imgcodecs.imread(path1);
         }
+        }
         else {
             isImageSet = false;
         }
-
+        if(isImageSet){
         ret = fileopen.showDialog(null, "Открыть файл");
         if (ret == JFileChooser.APPROVE_OPTION) {
             File file = fileopen.getSelectedFile();
@@ -78,8 +82,10 @@ public class Task23 {
             } catch (IOException a) {
 
             }
+            if(BuffIMG2 == null)isImageSet = false;
+            else{
             img2 =BufferedImage2Mat(BuffIMG2);
-            double normalS = 800 * 800;
+            double normalS = 600 * 600;
             double Sc = img2.width() * img2.height();
             double k2 = sqrt(Sc / normalS);
             if (k2 < 1) k2 = 1;
@@ -91,13 +97,11 @@ public class Task23 {
             Imgproc.warpAffine(img2, img2, tra2, new Size(img2.width() / k2, img2.height() / k2));
             //img2 = Imgcodecs.imread(path2);
         }
+        }
         else {
             isImageSet = false;
         }
-        if(img == null) System.out.println(" img1 empty ");
-        //else System.out.println(" img1 ");
-        if(img2 == null) System.out.println(" img2 empty");
-      //  else System.out.println(" img2 ");
+    }
     }
     static  public Point get(Point a) {
         return new Point((int)((tr[0][0] * a.x + tr[0][1] * a.y + tr[0][2]) / (tr[2][0] * a.x + tr[2][1] * a.y + tr[2][2])), (int)((tr[1][0] * a.x + tr[1][1] * a.y + tr[1][2]) / (tr[2][0] * a.x + tr[2][1] * a.y + tr[2][2])));
@@ -258,6 +262,8 @@ public class Task23 {
         Mat h = Calib3d.findHomography(p1, p2, Calib3d.RANSAC, 3);
         if (h.empty()) {
             System.out.println("Не удалось рассчитать матрицу трансформации");
+            // hhjjhjhhjhjhjjhjjhhj
+            diffFound = false;
             return;
         }
         for(int i = 0; i < 3; ++i) {

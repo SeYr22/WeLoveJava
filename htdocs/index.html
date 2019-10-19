@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+   <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="panel.js"></script>
+    <script type="text/javascript" src="panel1.js"></script>
+    <script type="text/javascript" src="solver.js"></script>
+
+
+    <style type="text/css">
+       html { height: 100% }
+       body { height: 100%; margin: 0; padding: 0 }
+       #map-canvas { height: 100% }
+   </style>
+   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDFLZwNZ3j2KNxR6_G4kqL4kO34cUxDZyU&sensor=false"></script>
+   <script type="text/javascript">
+    var map;
+	var cnt = 0;
+	var poly;
+	var arrLat = [];
+	var arrLon = [];
+	var markers = [];
+    function initialize() {
+
+        document.getElementById("buttonClear").disabled = true;
+        document.getElementById("buttonBuildPolygon").disabled = true;
+        document.getElementById("buttonBuildPath").disabled = true;
+        var myLatlng = new google.maps.LatLng(50, 32);
+
+        var myOptions = {
+            zoom:7,
+            center: myLatlng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        }
+
+        map = new google.maps.Map(document.getElementById("gmap"), myOptions);
+
+        poly = new google.maps.Polyline({
+            strokeColor: '#000000',
+            strokeOpacity: 1.0,
+            strokeWeight: 3
+        });
+
+        poly.setMap(map);
+
+        google.maps.event.addListener(map, "click", function(event) {
+                // get lat/lon of click
+            var clickLat = event.latLng.lat();
+            var clickLon = event.latLng.lng();
+            arrLat.push(clickLat);
+            arrLon.push(clickLon);
+            cnt++;
+            document.getElementById("buttonClear").disabled = false;
+            if(cnt > 3) document.getElementById("buttonBuildPolygon").disabled = false;
+                  var marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(clickLat,clickLon),
+                    map: map
+                 });
+            markers.push(marker);
+        });
+    }
+
+    function buildPolygon() {
+        document.getElementById("buttonBuildPolygon").disabled = true;
+        var path = poly.getPath();
+        for(var i = 1; i < cnt; i++){
+            path.push(new google.maps.LatLng(arrLat[i], arrLon[i]));
+            document.getElementById("buttonBuildPath").disabled = false;
+        }
+        path.push(new google.maps.LatLng(arrLat[1],arrLon[1]));
+    }
+
+    function setMapOnAll(map) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+    }
+
+    function clearMap(){
+        cnt++;
+        var path = poly.getPath();
+        while(cnt > 0) {
+            path.removeAt(0);
+            cnt--;
+        }
+        setMapOnAll(null);
+        markers = [];
+        arrLat = [];
+        arrLon = [];
+        document.getElementById("buttonBuildPath").disabled = true;
+        document.getElementById("buttonClear").disabled = true;
+        document.getElementById("buttonBuildPolygon").disabled = true;
+        initialize();
+    }
+
+    function drawPolygon (polygon, col) {
+        var bermudaTriangle = new google.maps.Polygon({
+          paths: polygon,
+          strokeColor: col,
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: col,
+          fillOpacity: 0
+        });
+        bermudaTriangle.setMap(map);
+    }
+
+    var to_write = [];
+
+    function download(name, type) {
+        var text = "";
+        for (var i = 0; i < to_write.length; i++) {
+            text += to_write[i] + "\n";
+        }
+       // alert(text);
+        var a = document.getElementById("a");
+        var file = new Blob([text], {type: type});
+        a.href = URL.createObjectURL(file);
+        a.download = name;
+    }
+    
+    function repath(path, start) {
+        let ans = [];
+        let pos = 0;
+        for (let i = 0; i < path.length; i++) {
+            if (start.x == path[i].x && start.y == path[i].y) {
+                pos = i;
+                break;
+            }
+        }
+        ans.push(start);
+        for (let i = pos + 1; i < path.length; i++) {
+            ans.push(path[i]);
+        }
+        for (let i = 0; i < pos; i++) {
+            ans.push(path[i]);
+        }
+        return ans;
+    }
+    
+    function buildPath(){
+        var minHeight = 0.02;
+        var maxHeight = document.getElementById("maxheight").value;
+        var cam_height = document.getElementById("cam_height").value;
+        var cam_width = document.getElementById("cam_width").value;
+        var focus = document.getElementById("fokus").value;
+        var en_go = document.getElementById("fly").value;
+        var en_photo = document.getElementById("takephoto").value;
+        if (!checkDouble(maxHeight) || !checkDouble(cam_height) || !checkDouble(cam_width) || !checkDouble(focus)
+            || !checkDouble(en_go) || !checkDouble(en_photo)) {
+            alert("Невірний формат вхідних данних.\n" +
+                "Мінімальна висота польоту 0.02 км\n");
+            return;
+        }
+        cm_height = cam_height;
+        cm_width = cam_width;
+        focu = focus;
+        var polygon = new Array(cnt);
+        for (var i = 0; i < cnt; i++) {
+            polygon[i] = new PointD(arrLat[i], arrLon[i]);
+        }
+        let ans = SalesmanPrepare.find(polygon, minHeight, maxHeight, en_go, en_photo);
+        ans = repath(ans, polygon[0]);
+        var m = ans.length;
+        for (var i = 1; i < m; i++) {
+            var cityCircle = new google.maps.Circle({
+                strokeColor: '#8A2BE2',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#8A2BE2',
+                fillOpacity: 0,
+                map: map,
+                center: {lat: ans[i].x, lng: ans[i].y},
+                radius: (h * 1000.0) / 3.0
+              });
+        }
+        var pathCoords = [];
+        for (var i = 0; i < m; i++) {
+            pathCoords.push({lat: ans[i].x, lng: ans[i].y});
+        }
+        drawPolygon(pathCoords, "#FF0000");
+        var sz = SalesmanPrepare.get_sz(h);
+        for (var i = 1; i < m; i++) {
+            var to_draw = [ new PointD(ans[i].x - sz.x / 2.0, ans[i].y - sz.y / 2.0),
+                            new PointD(ans[i].x + sz.x / 2.0, ans[i].y - sz.y / 2.0),
+                            new PointD(ans[i].x + sz.x / 2.0, ans[i].y + sz.y / 2.0),
+                            new PointD(ans[i].x - sz.x / 2.0, ans[i].y + sz.y / 2.0)];
+            var to_path = [];
+            for (var j = 0; j < 4; j++) {
+                to_path.push({lat: to_draw[j].x, lng: to_draw[j].y});
+            }
+            drawPolygon(to_path, "#008000");
+        }
+        h = Math.floor(h * 100.0) / 100.0;
+        document.getElementById("fly_height").value = h;
+        document.getElementById("cnt_vertexes").value = m;
+        var proc = document.getElementById("battery").value;
+        if (opt > proc) {
+            alert("Недостатньо заряду. Треба " + opt + " %");
+        }
+        document.getElementById("energy").value = Math.floor(opt * 100.0) / 100.0;
+        to_write = [];
+        to_write.push("Height = " + h + " km");
+        to_write.push("Coordinates (lat; lng):");
+        for (var i = 0; i < m; i++) {
+            to_write.push(ans[i].x + " " + ans[i].y);
+        }
+        to_write.push(ans[0].x + " " + ans[0].y);
+        download('answer.txt', 'text/plain');
+    }
+
+
+    function checkDouble(a) {
+        if (a.length == 0) return false;
+        if (a.length == 1 && a[0] == '0') return false;
+        if (a[0] == '0' && a.length > 1 && a[1] != '.') return false;
+        if (a[0] == '-' && a.length == 1) return false;
+        if (a[0] == '.' || a[a.length - 1] == '.') return false;
+        if (a.length > 1 && a[1] == '.' && a[0] == '-') return false;
+        let kol = 0, i = 0;
+        if (a[0] == '-') return false;
+        for (; i < a.length; i++) {
+            if ((a[i] < '0' || a[i] > '9') && a[i] != '.') return false;
+            if (a[i] == '.') kol++;
+        }
+        if (kol <= 1) return true;
+        return false;
+    }
+
+    window.onload = function () { initialize() };
+    </script>
+   <style>
+     div#gmap {
+        width: 100%;
+        height: 100%;
+        border:double;
+     }
+     .panel1 {
+         padding: 10px;
+         height: 100%;
+         background: #ff3333;
+         border: #282828 2px solid;
+         font-family: Georgia;
+     }
+    </style>
+</head>
+<body>
+    <div id="gmap"></div>
+    <div class="panel">
+        <a class="handle" href="#"></a>
+        <form>
+            <input type = "button" onclick = "buildPolygon()" value = "Побудувати многокутник" style="height:50px; width:20%; margin-left: 10%; " id = "buttonBuildPolygon" class="btn btn-warning"/>
+            <input type = "button" onclick = "buildPath()" value = "Побудувати маршрут" style="height:50px; width:20%;  margin-left: 10%; " id = "buttonBuildPath" class="btn btn-success"/>
+            <input type = "button" onclick = "clearMap()" value = "Очистити" style="height:50px; width:20%;  margin-left: 10%; " id = "buttonClear" class="btn btn-danger"/>
+        </form>
+    </div>
+    <div class="panel1">
+        <a class="handle1" href="#"></a>
+        <form>
+            <div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Максимальна висота польоту</span>
+                    <span class="input-group-text">км</span>
+                  </div>
+                  <input min="0.02" maxlength="3" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="maxheight" value="2">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm1">Фокальна відстань</span>
+                    <span class="input-group-text">мм</span>
+                  </div>
+                  <input maxlength="3" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="fokus" value="2">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm2">Ширина матриці камери</span>
+                    <span class="input-group-text">мм</span>
+                  </div>
+                  <input maxlength="3" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="cam_height" value="2">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm3">Довжина матриці камери</span>
+                    <span class="input-group-text">мм</span>
+                  </div>
+                  <input maxlength="3" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="cam_width" value="2">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm4">Заряд батареї</span>
+                    <span class="input-group-text">%</span>
+                  </div>
+                  <input max="100" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="battery" value="100">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm5">Витрати заряду на фото</span>
+                    <span class="input-group-text">%</span>
+                  </div>
+                  <input max="100" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="takephoto" value="0.025">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroup-sizing-sm6">Витрати заряду на політ</span>
+                    <span class="input-group-text">%/км</span>
+                  </div>
+                  <input maxlength="4" type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="fly" value="7">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm7">Висота польоту</span>
+                        <span class="input-group-text">км</span>
+                    </div>
+                    <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="fly_height" value="0" disabled>
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm8">Кількість вершин</span>
+                        <span class="input-group-text">шт.</span>
+                    </div>
+                    <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="cnt_vertexes" value="0" disabled>
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="inputGroup-sizing-sm9">Витрати заряду на шлях</span>
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <input type="text" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="energy" value="0" disabled>
+                </div>
+            </div>
+        </form>
+            <a id="a" class="btn btn-success"/>Файл зі шляхом </a>
+        </form>
+    </div>
+</body>
+</html>

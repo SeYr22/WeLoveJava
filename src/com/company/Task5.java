@@ -35,6 +35,8 @@ public class Task5 {
             } catch (IOException a) {
 
             }
+            if(BuffIMG == null) imageIsSet = false;
+            else{
             mat1 = BufferedImage2Mat(BuffIMG);
             double normalS = 500 * 500;
             double Sc = mat1.width() * mat1.height();
@@ -47,11 +49,11 @@ public class Task5 {
             );
             Imgproc.warpAffine(mat1, mat1, tra2, new Size(mat1.width() / k2, mat1.height() / k2));
             // img = Imgcodecs.imread(path1);
-        }
+        }}
         else {
             imageIsSet = false;
         }
-
+        if(imageIsSet){
         ret = fileopen.showDialog(null, "Открыть файл");
         if (ret == JFileChooser.APPROVE_OPTION) {
             File file = fileopen.getSelectedFile();
@@ -62,6 +64,8 @@ public class Task5 {
             } catch (IOException a) {
 
             }
+            if(BuffIMG2 == null) imageIsSet = false;
+            else{
             mat2 =BufferedImage2Mat(BuffIMG2);
             double normalS = 500 * 500;
             double Sc = mat2.width() * mat2.height();
@@ -75,8 +79,10 @@ public class Task5 {
             Imgproc.warpAffine(mat2, mat2, tra2, new Size(mat2.width() / k2, mat2.height() / k2));
             //img2 = Imgcodecs.imread(path2);
         }
+        }
         else {
             imageIsSet = false;
+        }
         }
     }
    public static void solvetask5(){

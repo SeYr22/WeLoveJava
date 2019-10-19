@@ -74,7 +74,7 @@ public class Task4 {
                         PhotosInfo.photos.get(i).getRightTopCorner().toString() + " " +
                         PhotosInfo.photos.get(i).getLeftTopCorner().toString());*/
            // }
-            System.out.println("Incorrect data");
+           // System.out.println("Incorrect data");
         }
         return listOfImages;
     }
