@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TUI:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TUI_jar</output-path>
+    <root id="archive" name="TUI.jar">
+      <element id="module-output" name="TUI" />
+      <element id="extracted-dir" path="D:/googleMAP/lib/jxbrowser-win64-7.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/googleMAP/lib/jxbrowser-7.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/googleMAP/lib/jxbrowser-swing-7.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/opencv/build/java/opencv-341.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/googleMAP/lib/jxbrowser-javafx-7.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
